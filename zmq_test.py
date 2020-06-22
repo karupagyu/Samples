@@ -5,7 +5,7 @@ import cv2
 import time
 import random
 
-import concurrent.futures
+# import concurrent.futures
 import threading
 
 import zmq
@@ -18,13 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 def serialize_msgpack_numpy(obj):
-    msg = msgpack.packb(obj,default=msgpack_numpy.encode)
+    msg = msgpack.packb(obj, default=msgpack_numpy.encode)
     return msg
 
-def deserialize_msgpack_numpy(msg):
-    obj = msgpack.unpackb(msg,object_hook=msgpack_numpy.decode)
-    return obj
 
+def deserialize_msgpack_numpy(msg):
+    obj = msgpack.unpackb(msg, object_hook=msgpack_numpy.decode)
+    return obj
 
 
 def pub():
@@ -32,9 +32,9 @@ def pub():
     isOpened = camera.isOpened()
     logger.info({'action': 'Open Camera',
                  'isOpened': isOpened})
- 
+
     ret, frame = camera.read()
-    
+
     host = '127.0.0.1'
     port = 5990
     hwm = 10
@@ -45,7 +45,7 @@ def pub():
     sock.set_hwm(hwm)
     sock.bind("tcp://{}:{}".format(host, port))
 
-    #Sub側の受信準備を待つため
+    # Sub側の受信準備を待つため
     time.sleep(1)
 
     id = 0
@@ -58,10 +58,11 @@ def pub():
 
         ret, frame = camera.read()
         b_frame = serialize_msgpack_numpy(frame)
-        sock.send_multipart([b_topic, b_id, b_frame],flags=zmq.NOBLOCK)
-        logger.info({'action': 'send', "id" : id, "byte-size" : len(b_frame) })
+        sock.send_multipart([b_topic, b_id, b_frame], flags=zmq.NOBLOCK)
+        logger.info({'action': 'send', "id": id, "byte-size": len(b_frame)})
 
         time.sleep(1)
+
 
 def sub_1():
     """
@@ -75,7 +76,7 @@ def sub_1():
     # SUBに指定します。
     sock = context.socket(zmq.SUB)
     sock.set_hwm(hwm)
- 
+
     channel = '1'.encode('utf-8')
     # 必ずSUBSCRIBERを指定します。指定しないと受け取れません。
     sock.setsockopt(zmq.SUBSCRIBE, channel)
@@ -86,7 +87,7 @@ def sub_1():
 
         id = b_id.decode('utf-8')
         frame = deserialize_msgpack_numpy(b_frame)
-        logger.info({"action" : "recv", "id" : id})
+        logger.info({"action": "recv", "id": id})
 
         cv2.imshow('camera', frame)
 
@@ -94,7 +95,6 @@ def sub_1():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        
 
 if __name__ == "__main__":
 
@@ -102,14 +102,14 @@ if __name__ == "__main__":
     # executor.submit(sub_1)
     # executor.submit(pub)
 
-    pt=threading.Thread(target=pub)
+    pt = threading.Thread(target=pub)
     pt.setDaemon(True)
     pt.start()
 
     time.sleep(15)
-    st=threading.Thread(target=sub_1)
+    st = threading.Thread(target=sub_1)
     st.setDaemon(True)
     st.start()
-    
+
     pt.join()
     st.join()
