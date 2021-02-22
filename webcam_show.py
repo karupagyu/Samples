@@ -1,6 +1,6 @@
 import cv2
 
-camera = cv2.VideoCapture(3)                # カメラCh.(ここでは0)を指定
+camera = cv2.VideoCapture(0)                # カメラCh.(ここでは0)を指定
 
 # 撮影＝ループ中にフレームを1枚ずつ取得（qキーで撮影終了）
 while True:
